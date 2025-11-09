@@ -1,0 +1,4 @@
+db:
+  path: data.db
+targets:
+  - https://example.com
