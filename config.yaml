@@ -1,4 +1,28 @@
 db:
   path: data.db
+
+crawler:
+  max_concurrent: 5
+  timeout: 10
+  max_retries: 3
+  delay_between_requests: 1.0
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  skip_duplicates: true  # 중복 URL 건너뛰기
+
 targets:
   - https://example.com
+  - https://httpbin.org/html
+  - https://httpbin.org/delay/1
+
+rss_feeds:
+  - https://news.ycombinator.com/rss
+  - https://hnrss.org/newest?points=100
+
+scheduler:
+  enabled: false  # 스케줄러 활성화 여부
+  interval_minutes: 60  # 분 단위 간격 (간단 모드)
+  cron: null  # cron 표현식 (null이면 interval 사용)
+  # cron 예시:
+  # - "0 */6 * * *"  # 6시간마다
+  # - "0 9 * * *"    # 매일 오전 9시
+  # - "0 0 * * 0"    # 매주 일요일 자정
