@@ -56,6 +56,15 @@ python main.py --config custom_config.yaml
 db:
   path: data.db
 
+# 로깅
+logging:
+  log_dir: logs              # 로그 파일 디렉터리
+  level: INFO                # 로그 레벨 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  enable_file_logging: true  # 파일 로깅 활성화
+  enable_console_logging: true  # 콘솔 로깅 활성화
+  max_bytes: 10485760        # 로그 파일 최대 크기 (10MB)
+  backup_count: 5            # 로테이션된 로그 파일 보관 개수
+
 # 크롤러 설정
 crawler:
   max_concurrent: 5          # 최대 동시 요청 수
@@ -79,12 +88,30 @@ scheduler:
   cron: "0 */6 * * *"        # 또는 cron 표현식
 ```
 
+## 로깅
+
+프로젝트는 3가지 로그 파일을 생성합니다:
+
+1. **collector.log**: 모든 로그 (INFO 레벨 이상)
+2. **error.log**: 에러만 분리 기록
+3. **collector_YYYY-MM-DD.log**: 일별 로그
+
+로그 파일은 10MB 크기 제한으로 자동 로테이션되며, 최근 5개 파일을 보관합니다.
+
+```powershell
+# 로그 확인
+Get-Content logs/collector.log -Tail 50
+Get-Content logs/error.log
+```
+
 ## 파일 구조
 
 - `main.py`: 진입점 및 스케줄러
 - `modules/crawler.py`: 비동기 크롤러 (에러 처리, 재시도)
 - `modules/rss_reader.py`: RSS/Atom 피드 리더
 - `modules/database.py`: SQLite DB 인터페이스 (중복 검사)
+- `modules/logger.py`: 로깅 모듈 (파일/콘솔, 로그 로테이션)
 - `config.yaml`: 설정 파일
 - `requirements.txt`: 패키지 목록
 - `tests/`: 단위 테스트
+- `logs/`: 로그 파일 디렉터리

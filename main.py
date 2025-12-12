@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import yaml
 import argparse
 from typing import List, Optional, Dict
@@ -7,13 +6,38 @@ from datetime import datetime
 from modules.crawler import AsyncCrawler
 from modules.rss_reader import RSSReader
 from modules.database import init_db, save_item
+from modules.logger import setup_logger, get_logger, log_stats
 
 
-logging.basicConfig(
-    level=logging.INFO, 
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
+def initialize_logger(config_path: str = "config.yaml"):
+    """설정 파일을 읽어 로거 초기화"""
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f)
+        
+        log_config = cfg.get("logging", {})
+        return setup_logger(
+            name="data_collector",
+            log_dir=log_config.get("log_dir", "logs"),
+            level=log_config.get("level", "INFO"),
+            enable_file_logging=log_config.get("enable_file_logging", True),
+            enable_console_logging=log_config.get("enable_console_logging", True),
+            max_bytes=log_config.get("max_bytes", 10485760),
+            backup_count=log_config.get("backup_count", 5)
+        )
+    except Exception as e:
+        # 설정 파일 로드 실패 시 기본 로거 사용
+        return setup_logger(
+            name="data_collector",
+            log_dir="logs",
+            level="INFO",
+            enable_file_logging=True,
+            enable_console_logging=True
+        )
+
+
+# 로거 초기화 (전역)
+logger = None
 
 
 async def collect_url(crawler: AsyncCrawler, url: str, db_path: str, semaphore: asyncio.Semaphore, skip_duplicates: bool = True) -> Optional[Dict]:
@@ -23,21 +47,21 @@ async def collect_url(crawler: AsyncCrawler, url: str, db_path: str, semaphore: 
         if skip_duplicates:
             from modules.database import url_exists
             if await url_exists(db_path, url):
-                logging.info("⏭ 중복 URL 건너뛜: %s", url)
+                logger.info("⏭ 중복 URL 건너뛜: %s", url)
                 return {"skipped": True, "url": url}
         
-        logging.info("수집 시작: %s", url)
+        logger.info("수집 시작: %s", url)
         try:
             item = await crawler.fetch_and_parse(url)
             if item:
                 await save_item(db_path, item)
-                logging.info("✓ 수집 및 저장됨: %s", item.get("title"))
+                logger.info("✓ 수집 및 저장됨: %s", item.get("title"))
                 return item
             else:
-                logging.warning("✗ 수집 실패 (응답 없음): %s", url)
+                logger.warning("✗ 수집 실패 (응답 없음): %s", url)
                 return None
         except Exception as e:
-            logging.error("✗ 수집 중 예외 발생: %s - %s", url, str(e))
+            logger.error("✗ 수집 중 예외 발생: %s - %s", url, str(e), exc_info=True)
             return None
 
 
@@ -46,16 +70,16 @@ async def collect_all(targets: List[str], db_path: str, max_concurrent: int = 5,
     crawler = AsyncCrawler(**crawler_kwargs)
     semaphore = asyncio.Semaphore(max_concurrent)
     
-    logging.debug("크롤러 설정: timeout=%s, max_retries=%s, delay=%s, skip_duplicates=%s", 
+    logger.debug("크롤러 설정: timeout=%s, max_retries=%s, delay=%s, skip_duplicates=%s", 
                   crawler_kwargs.get('timeout'), 
                   crawler_kwargs.get('max_retries', 3),
                   crawler_kwargs.get('delay', 1.0),
                   skip_duplicates)
     
     try:
-        logging.info("=" * 60)
-        logging.info("수집 시작: 총 %d개 URL (최대 동시 실행: %d)", len(targets), max_concurrent)
-        logging.info("=" * 60)
+        logger.info("=" * 60)
+        logger.info("수집 시작: 총 %d개 URL (최대 동시 실행: %d)", len(targets), max_concurrent)
+        logger.info("=" * 60)
         
         tasks = [collect_url(crawler, url, db_path, semaphore, skip_duplicates) for url in targets]
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -65,10 +89,7 @@ async def collect_all(targets: List[str], db_path: str, max_concurrent: int = 5,
         success_count = sum(1 for r in results if r is not None and not isinstance(r, Exception) and not (isinstance(r, dict) and r.get("skipped")))
         fail_count = len(results) - success_count - skipped_count
         
-        logging.info("=" * 60)
-        logging.info("수집 완료: 성공 %d개, 실패 %d개, 중복 건너뛜 %d개 (총 %d개)", 
-                     success_count, fail_count, skipped_count, len(targets))
-        logging.info("=" * 60)
+        log_stats(logger, success_count, fail_count, skipped_count, len(targets))
         
         return results
     finally:
@@ -83,18 +104,18 @@ async def collect_rss_feeds(rss_urls: List[str], db_path: str, **reader_kwargs):
     reader = RSSReader(**reader_kwargs)
     
     try:
-        logging.info("=" * 60)
-        logging.info("RSS 피드 수집 시작: 총 %d개", len(rss_urls))
-        logging.info("=" * 60)
+        logger.info("=" * 60)
+        logger.info("RSS 피드 수집 시작: 총 %d개", len(rss_urls))
+        logger.info("=" * 60)
         
         results = []
         for feed_url in rss_urls:
-            logging.info("피드 수집 시작: %s", feed_url)
+            logger.info("피드 수집 시작: %s", feed_url)
             feed_data = await reader.fetch_and_parse(feed_url)
             
             if feed_data and feed_data.get("entries"):
                 entries = feed_data["entries"]
-                logging.info("✓ 피드 수집됨: %s (%d개 항목)", 
+                logger.info("✓ 피드 수집됨: %s (%d개 항목)", 
                             feed_data.get("title", "Unknown"), len(entries))
                 
                 # 각 항목을 DB에 저장
@@ -109,11 +130,11 @@ async def collect_rss_feeds(rss_urls: List[str], db_path: str, **reader_kwargs):
                 
                 results.append(feed_data)
             else:
-                logging.warning("✗ 피드 수집 실패: %s", feed_url)
+                logger.warning("✗ 피드 수집 실패: %s", feed_url)
         
-        logging.info("=" * 60)
-        logging.info("RSS 피드 수집 완료: 성공 %d개 (총 %d개)", len(results), len(rss_urls))
-        logging.info("=" * 60)
+        logger.info("=" * 60)
+        logger.info("RSS 피드 수집 완료: 성공 %d개 (총 %d개)", len(results), len(rss_urls))
+        logger.info("=" * 60)
         
         return results
     finally:
@@ -122,7 +143,7 @@ async def collect_rss_feeds(rss_urls: List[str], db_path: str, **reader_kwargs):
 
 async def run_collection(config_path: str = "config.yaml"):
     """수집 작업 실행 (스케줄러에서 호출됨)"""
-    logging.info("▶ 수집 작업 시작: %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("▶ 수집 작업 시작: %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
     with open(config_path, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
@@ -167,6 +188,8 @@ async def run_collection(config_path: str = "config.yaml"):
 
 async def main():
     """메인 함수: 스케줄러 또는 일회성 실행"""
+    global logger
+    
     parser = argparse.ArgumentParser(description="Data Collector - 웹 크롤러 및 RSS 리더")
     parser.add_argument(
         "--schedule", 
@@ -180,6 +203,9 @@ async def main():
     )
     args = parser.parse_args()
     
+    # 로거 초기화
+    logger = initialize_logger(args.config)
+    
     if args.schedule:
         # 스케줄러 모드
         with open(args.config, "r", encoding="utf-8") as f:
@@ -187,7 +213,7 @@ async def main():
         
         scheduler_config = cfg.get("scheduler", {})
         if not scheduler_config.get("enabled", False):
-            logging.warning("스케줄러가 비활성화되어 있습니다. config.yaml에서 scheduler.enabled=true로 설정하세요.")
+            logger.warning("스케줄러가 비활성화되어 있습니다. config.yaml에서 scheduler.enabled=true로 설정하세요.")
             return
         
         from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -201,12 +227,12 @@ async def main():
         if cron_expr:
             # cron 표현식 사용
             trigger = CronTrigger.from_crontab(cron_expr)
-            logging.info("스케줄러 설정: cron='%s'", cron_expr)
+            logger.info("스케줄러 설정: cron='%s'", cron_expr)
         else:
             # interval 사용
             interval_minutes = scheduler_config.get("interval_minutes", 60)
             trigger = IntervalTrigger(minutes=interval_minutes)
-            logging.info("스케줄러 설정: %d분 간격", interval_minutes)
+            logger.info("스케줄러 설정: %d분 간격", interval_minutes)
         
         # 작업 등록
         scheduler.add_job(
@@ -217,9 +243,9 @@ async def main():
             replace_existing=True
         )
         
-        logging.info("="*60)
-        logging.info("스케줄러 시작됨. 종료하려면 Ctrl+C를 누르세요.")
-        logging.info("="*60)
+        logger.info("="*60)
+        logger.info("스케줄러 시작됨. 종료하려면 Ctrl+C를 누르세요.")
+        logger.info("="*60)
         
         # 초기 실행 (즉시)
         await run_collection(args.config)
@@ -232,9 +258,9 @@ async def main():
             while True:
                 await asyncio.sleep(60)
         except (KeyboardInterrupt, SystemExit):
-            logging.info("스케줄러 종료 중...")
+            logger.info("스케줄러 종료 중...")
             scheduler.shutdown()
-            logging.info("스케줄러가 정지되었습니다.")
+            logger.info("스케줄러가 정지되었습니다.")
     else:
         # 일회성 실행
         await run_collection(args.config)

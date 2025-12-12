@@ -1,6 +1,16 @@
 db:
   path: data.db
 
+logging:
+  log_dir: logs  # 로그 파일 디렉토리
+  level: INFO  # 로그 레벨: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  enable_file_logging: true  # 파일 로깅 활성화
+  enable_console_logging: true  # 콘솔 로깅 활성화
+  max_bytes: 10485760  # 로그 파일 최대 크기 (10MB)
+  backup_count: 5  # 로테이션된 로그 파일 보관 개수
+  enable_daily_log: true  # 일별 로그 파일 생성
+  enable_error_log: true  # 에러 전용 로그 파일 생성
+
 crawler:
   max_concurrent: 5
   timeout: 10

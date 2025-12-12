@@ -20,13 +20,26 @@
 - [x] RSS/Atom 피드 리더 (feedparser 통합)
 - [x] 스케줄러 (APScheduler, cron/interval 지원)
 
+### 🚧 진행 중 (2025-12-13)
+- [x] 로깅 개선 (2.4) - 파일 로깅, 로그 로테이션, 레벨별 분리 ✅ 완료
+
+### 📅 이번 주 계획
+1. ~~**로깅 개선** (우선순위: 최고) - 15-20분~~ ✅ **완료**
+2. **설정 파일 확장** - 타겟별 설정, 환경 변수 지원 (다음 작업)
+3. **본문 정제 개선** - trafilatura 통합
+
+### 📅 다음 주 계획
+1. Docker 컨테이너화
+2. CI/CD 파이프라인 기본 설정
+3. 블로그 콘텐츠 분석 모듈 시작
+
 ---
 
 ## 📋 다음 작업 목록
 
 ### 1단계: 핵심 기능 강화 (우선순위: 높음)
 
-#### 1.1 동시성 추가
+#### 
 - [x] asyncio.gather를 사용한 병렬 URL 수집
 - [x] asyncio.Semaphore로 동시 요청 수 제한 (예: 최대 5개)
 - [x] 워커 풀 패턴 구현 (선택)
@@ -92,13 +105,35 @@
 **파일:** `config.yaml`, 새 파일 `config_loader.py`
 
 #### 2.4 로깅 개선
-- [ ] 파일 로깅 (logs/ 디렉터리)
-- [ ] 로그 로테이션 (일별/크기별)
-- [ ] 로그 레벨별 분리 (debug, info, error)
-- [ ] 구조화된 로깅 (JSON 형식 선택)
+- [x] 파일 로깅 (logs/ 디렉터리) ✅
+- [x] 로그 로테이션 (일별/크기별) ✅
+- [x] 로그 레벨별 분리 (debug, info, error) ✅
+- [x] 구조화된 로깅 (JSON 형식 선택) ✅
 
-**예상 시간:** 15분  
-**파일:** `main.py`, 새 파일 `modules/logger.py`
+**완료:** 2025-12-13  
+**실제 소요 시간:** 약 20분  
+**파일:** `main.py`, `modules/logger.py`, `config.yaml`, `test_logging.py`
+
+**구현 내용:**
+- `modules/logger.py`: 종합 로깅 모듈 생성
+  - RotatingFileHandler: 10MB 제한, 5개 백업
+  - 3가지 로그 파일: collector.log (전체), error.log (에러만), collector_YYYY-MM-DD.log (일별)
+  - 콘솔 + 파일 동시 출력
+  - 편의 함수: log_collection_start/success/failure/error/stats
+- `main.py`: 로깅 시스템 통합
+  - config.yaml에서 로깅 설정 읽기
+  - 모든 logging 호출을 logger로 변경
+  - initialize_logger() 함수로 설정 기반 초기화
+- `config.yaml`: 로깅 설정 추가
+  - log_dir, level, max_bytes, backup_count 등
+- `test_logging.py`: 로깅 테스트 스크립트 생성
+
+**테스트 결과:**
+- ✅ 콘솔 로깅 정상 작동
+- ✅ 파일 로깅 (logs/collector.log) 정상
+- ✅ 에러 로그 분리 (logs/error.log) 정상
+- ✅ 일별 로그 (logs/collector_2025-12-13.log) 정상
+- ✅ 크롤러 통합 테스트 통과 (50개 항목 수집 성공)
 
 ---
 
