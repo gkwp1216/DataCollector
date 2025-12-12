@@ -21,16 +21,17 @@
 - [x] 스케줄러 (APScheduler, cron/interval 지원)
 
 ### 🚧 진행 중 (2025-12-13)
-- [x] 로깅 개선 (2.4) - 파일 로깅, 로그 로테이션, 레벨별 분리 ✅ 완료
+- [x] 로그 개선 (2.4) - 파일 로그, 로그 로테이션, 레벨별 분리 ✅ 완료
 - [x] 설정 파일 확장 (2.3) - 환경 변수, 프로파일, 타겟별 설정 ✅ 완료
+- [x] Docker 컨테이너화 (4.2) - Dockerfile, docker-compose ✅ 완료
 
 ### 📅 이번 주 계획
-1. ~~**로깅 개선** (우선순위: 최고) - 15-20분~~ ✅ **완료**
+1. ~~**로그 개선** (우선순위: 최고) - 15-20분~~ ✅ **완료**
 2. ~~**설정 파일 확장** - 타겟별 설정, 환경 변수 지원~~ ✅ **완료**
-3. **본문 정제 개선** - trafilatura 통합 (다음 작업)
+3. ~~**Docker 컨테이너화**~~ ✅ **완료**
 
 ### 📅 다음 주 계획
-1. Docker 컨테이너화
+1. ~~Docker 컨테이너화~~ ✅ **완료**
 2. CI/CD 파이프라인 기본 설정
 3. 블로그 콘텐츠 분석 모듈 시작
 
@@ -40,7 +41,7 @@
 
 ### 1단계: 핵심 기능 강화 (우선순위: 높음)
 
-####
+#
 - [x] asyncio.gather를 사용한 병렬 URL 수집
 - [x] asyncio.Semaphore로 동시 요청 수 제한 (예: 최대 5개)
 - [x] 워커 풀 패턴 구현 (선택)
@@ -227,13 +228,41 @@
 **파일:** `main.py`, 새 파일 `cli.py`
 
 #### 4.2 Docker 컨테이너화
-- [ ] Dockerfile 작성
-- [ ] docker-compose.yml (DB 포함 옵션)
-- [ ] 최적화된 이미지 (멀티 스테이지 빌드)
-- [ ] 실행 가이드
+- [x] Dockerfile 작성 ✅
+- [x] docker-compose.yml (DB 포함 옵션) ✅
+- [x] 최적화된 이미지 (멀티 스테이지 빌드) ✅
+- [x] 실행 가이드 ✅
 
-**예상 시간:** 30분  
-**파일:** 새 파일 `Dockerfile`, `docker-compose.yml`
+**완료:** 2025-12-13  
+**실제 소요 시간:** 약 25분  
+**파일:** `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `README.md`
+
+**구현 내용:**
+- `Dockerfile`: 멀티 스테이지 빌드로 최적화
+  - Builder 스테이지: 빌드 종속성 설치
+  - Final 스테이지: 경량 이미지 (python:3.14-slim)
+  - Health check 포함
+  - APP_PROFILE=prod 기본 설정
+- `docker-compose.yml`: 종합 오케스트레이션
+  - 볼륨 마운트: data.db, logs, config 파일
+  - 환경 변수 설정
+  - 리소스 제한: CPU 1.0, Memory 512M
+  - restart: unless-stopped
+  - PostgreSQL 서비스 예시 (코멘트)
+- `.dockerignore`: 불필요한 파일 제외
+  - 가상환경, 로그, 테스트, IDE 설정 등
+- `README.md`: Docker 사용법 추가
+  - 빌드 및 실행 명령어
+  - docker-compose 사용법
+  - 프로덕션 배포 예시
+  - 트러블슈팅 가이드
+
+**특징:**
+- 멀티 스테이지 빌드로 이미지 크기 최소화
+- 환경 변수로 유연한 설정 관리
+- 볼륨 마운트로 데이터 영속성 보장
+- 프로파일별 컨테이너 실행 가능
+- 리소스 제한으로 안정성 확보
 
 #### 4.3 CI/CD 파이프라인
 - [ ] GitHub Actions 워크플로우

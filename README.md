@@ -188,3 +188,114 @@ target_configs:
 - `requirements.txt`: 패키지 목록
 - `tests/`: 단위 테스트
 - `logs/`: 로그 파일 디렉터리
+
+## Docker 사용법
+
+### Docker 빌드 및 실행
+
+```powershell
+# Docker Desktop 실행 확인
+
+# 이미지 빌드
+docker build -t data-collector:latest .
+
+# 컨테이너 실행 (일회성)
+docker run --rm data-collector:latest
+
+# 백그라운드 실행
+docker run -d --name collector data-collector:latest
+
+# 볼륨 마운트 (데이터 및 로그 유지)
+docker run -d --name collector `
+  -v ${PWD}/data.db:/app/data.db `
+  -v ${PWD}/logs:/app/logs `
+  data-collector:latest
+
+# 환경 변수 전달
+docker run -d --name collector `
+  -e APP_PROFILE=prod `
+  -e LOG_LEVEL=INFO `
+  -e CRAWLER_MAX_CONCURRENT=10 `
+  data-collector:latest
+
+# 로그 확인
+docker logs collector
+docker logs -f collector  # 실시간
+
+# 컨테이너 중지/시작/삭제
+docker stop collector
+docker start collector
+docker rm collector
+```
+
+### Docker Compose 사용
+
+```powershell
+# 서비스 시작 (백그라운드)
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f
+
+# 서비스 중지
+docker-compose down
+
+# 서비스 재시작
+docker-compose restart
+
+# 이미지 재빌드 후 시작
+docker-compose up -d --build
+```
+
+### Docker Compose 설정 커스터마이징
+
+`docker-compose.yml`에서 다음을 수정할 수 있습니다:
+
+```yaml
+# 환경 변수 변경
+environment:
+  - APP_PROFILE=prod
+  - LOG_LEVEL=INFO
+  - CRAWLER_MAX_CONCURRENT=10
+
+# 리소스 제한 조정
+deploy:
+  resources:
+    limits:
+      cpus: '2.0'
+      memory: 1G
+```
+
+### 프로덕션 배포 예시
+
+```powershell
+# 프로덕션 설정으로 빌드
+docker build -t data-collector:prod .
+
+# 스케줄러 모드로 실행
+docker run -d --name collector_prod `
+  --restart unless-stopped `
+  -v ${PWD}/data.db:/app/data.db `
+  -v ${PWD}/logs:/app/logs `
+  -v ${PWD}/config.prod.yaml:/app/config.prod.yaml `
+  -e APP_PROFILE=prod `
+  data-collector:prod `
+  python main.py --schedule --profile prod
+```
+
+### 트러블슈팅
+
+```powershell
+# 컨테이너 내부 접속
+docker exec -it collector /bin/bash
+
+# 컨테이너 상태 확인
+docker ps -a
+docker inspect collector
+
+# 이미지 목록
+docker images
+
+# 사용하지 않는 이미지/컨테이너 정리
+docker system prune -a
+```

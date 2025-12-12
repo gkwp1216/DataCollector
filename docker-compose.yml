@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: data-collector:latest
+    container_name: data_collector
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - APP_PROFILE=prod
+      - LOG_LEVEL=INFO
+      - CRAWLER_MAX_CONCURRENT=10
+      - SCHEDULER_ENABLED=true
+      # Add more environment variables as needed
+    
+    # Alternative: Use .env file
+    # env_file:
+    #   - .env
+    
+    # Volumes for persistent data
+    volumes:
+      - ./data.db:/app/data.db
+      - ./logs:/app/logs
+      - ./config.yaml:/app/config.yaml
+      - ./config.prod.yaml:/app/config.prod.yaml
+    
+    # Command override (optional)
+    # command: python main.py --schedule --profile prod
+    
+    # Network (if needed)
+    # networks:
+    #   - collector-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Optional: Multiple collectors with different profiles
+  # collector-dev:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: data_collector_dev
+  #   environment:
+  #     - APP_PROFILE=dev
+  #   volumes:
+  #     - ./data-dev.db:/app/data.db
+  #     - ./logs-dev:/app/logs
+  #   command: python main.py
+
+# Optional: Database service (if using PostgreSQL in future)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: collector_db
+  #   environment:
+  #     - POSTGRES_DB=collector
+  #     - POSTGRES_USER=collector
+  #     - POSTGRES_PASSWORD=collector_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# Networks
+# networks:
+#   collector-network:
+#     driver: bridge
+
+# Volumes
+# volumes:
+#   postgres_data:
