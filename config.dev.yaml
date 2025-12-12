@@ -1,0 +1,21 @@
+# Development Profile Configuration
+# 이 파일은 config.yaml의 설정을 오버라이드합니다
+
+logging:
+  level: DEBUG  # 개발 환경에서는 DEBUG 레벨
+  enable_console_logging: true
+
+crawler:
+  max_concurrent: 3  # 개발 환경에서는 동시 요청 수 제한
+  delay_between_requests: 2.0  # 더 긴 지연 시간
+
+scheduler:
+  enabled: false  # 개발 환경에서는 수동 실행
+
+# 테스트용 타겟
+targets:
+  - https://example.com
+  - https://httpbin.org/html
+
+rss_feeds:
+  - https://news.ycombinator.com/rss

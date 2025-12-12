@@ -22,11 +22,12 @@
 
 ### 🚧 진행 중 (2025-12-13)
 - [x] 로깅 개선 (2.4) - 파일 로깅, 로그 로테이션, 레벨별 분리 ✅ 완료
+- [x] 설정 파일 확장 (2.3) - 환경 변수, 프로파일, 타겟별 설정 ✅ 완료
 
 ### 📅 이번 주 계획
 1. ~~**로깅 개선** (우선순위: 최고) - 15-20분~~ ✅ **완료**
-2. **설정 파일 확장** - 타겟별 설정, 환경 변수 지원 (다음 작업)
-3. **본문 정제 개선** - trafilatura 통합
+2. ~~**설정 파일 확장** - 타겟별 설정, 환경 변수 지원~~ ✅ **완료**
+3. **본문 정제 개선** - trafilatura 통합 (다음 작업)
 
 ### 📅 다음 주 계획
 1. Docker 컨테이너화
@@ -39,7 +40,7 @@
 
 ### 1단계: 핵심 기능 강화 (우선순위: 높음)
 
-#### 
+####
 - [x] asyncio.gather를 사용한 병렬 URL 수집
 - [x] asyncio.Semaphore로 동시 요청 수 제한 (예: 최대 5개)
 - [x] 워커 풀 패턴 구현 (선택)
@@ -96,13 +97,50 @@
 **파일:** `main.py`, `requirements.txt`, `config.yaml`
 
 #### 2.3 설정 파일 확장
-- [ ] 타겟별 설정 (URL, 파서 규칙, 헤더 등)
-- [ ] 여러 프로파일 지원 (dev, prod)
-- [ ] 환경 변수 지원 (.env 파일)
-- [ ] 설정 검증 함수
+- [x] 타겟별 설정 (URL, 파서 규칙, 헤더 등) ✅
+- [x] 여러 프로파일 지원 (dev, prod) ✅
+- [x] 환경 변수 지원 (.env 파일) ✅
+- [x] 설정 검증 함수 ✅
 
-**예상 시간:** 20분  
-**파일:** `config.yaml`, 새 파일 `config_loader.py`
+**완료:** 2025-12-13  
+**실제 소요 시간:** 약 25분  
+**파일:** `modules/config_loader.py`, `config.dev.yaml`, `config.prod.yaml`, `.env.example`, `main.py`, `requirements.txt`
+
+**구현 내용:**
+- `modules/config_loader.py`: 설정 로더 모듈 생성 (175 lines)
+  - ConfigLoader 클래스: YAML 기반 설정 로드
+  - 프로파일 지원: config.{profile}.yaml 자동 로드 및 병합
+  - 환경 변수 오버라이드: .env 또는 시스템 환경 변수 우선 적용
+  - 설정 검증: 필수 항목 및 유효성 검사
+  - 점 표기법 지원: config.get("db.path")
+- `config.dev.yaml`: 개발 환경 설정
+  - DEBUG 로그 레벨
+  - 낮은 동시성 (max_concurrent: 3)
+  - 긴 요청 지연 (2.0초)
+  - 스케줄러 비활성화
+- `config.prod.yaml`: 프로덕션 환경 설정
+  - INFO 로그 레벨
+  - 높은 동시성 (max_concurrent: 10)
+  - 짧은 요청 지연 (0.5초)
+  - 스케줄러 활성화
+- `.env.example`: 환경 변수 템플릿
+  - 모든 설정 항목에 대한 환경 변수 예시
+  - 콤마 구분 리스트 지원 (TARGETS, RSS_FEEDS)
+- `main.py`: config_loader 통합
+  - ConfigLoader 사용으로 전환
+  - --profile 인수 추가
+  - APP_PROFILE 환경 변수 지원
+  - 우선순위: 환경 변수 > 프로파일 > 기본 설정
+- `config.yaml`: target_configs 섹션 추가
+  - 타겟별 상세 설정 (timeout, retries, delay, headers)
+
+**테스트 결과:**
+- ✅ 기본 설정 로드: config.yaml 정상
+- ✅ 프로파일 로드: dev/prod 프로파일 병합 정상
+- ✅ 환경 변수 오버라이드: .env 및 시스템 변수 우선 적용
+- ✅ 설정 검증: 필수 항목 및 유효성 검사 통과
+- ✅ main.py 통합: --profile dev로 실행 성공 (30개 항목 수집)
+- ✅ 타겟별 설정: config.yaml의 target_configs 적용 가능
 
 #### 2.4 로깅 개선
 - [x] 파일 로깅 (logs/ 디렉터리) ✅

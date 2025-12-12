@@ -1,0 +1,24 @@
+# Production Profile Configuration
+# 이 파일은 config.yaml의 설정을 오버라이드합니다
+
+logging:
+  level: INFO  # 프로덕션에서는 INFO 레벨
+  enable_console_logging: false  # 프로덕션에서는 파일 로깅만
+
+crawler:
+  max_concurrent: 10  # 프로덕션에서는 더 많은 동시 요청
+  delay_between_requests: 0.5  # 더 짧은 지연 시간
+  skip_duplicates: true
+
+scheduler:
+  enabled: true  # 프로덕션에서는 스케줄러 활성화
+  interval_minutes: 60  # 1시간마다 실행
+  # cron: "0 */6 * * *"  # 또는 6시간마다
+
+# 프로덕션 타겟 (실제 사용할 URL로 변경)
+targets:
+  - https://example.com
+
+rss_feeds:
+  - https://news.ycombinator.com/rss
+  - https://hnrss.org/newest?points=100

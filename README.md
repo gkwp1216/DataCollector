@@ -38,10 +38,38 @@ python -m pytest -q
 python main.py
 ```
 
+### 프로파일 사용
+```powershell
+# 개발 환경 설정으로 실행
+python main.py --profile dev
+
+# 프로덕션 환경 설정으로 실행
+python main.py --profile prod
+
+# 환경 변수로 프로파일 지정
+$env:APP_PROFILE="dev"
+python main.py
+```
+
+### 환경 변수 사용
+```powershell
+# .env 파일 생성 (선택 사항)
+cp .env.example .env
+# .env 파일 편집하여 설정 변경
+
+# 환경 변수는 config.yaml 설정을 오버라이드합니다
+$env:CRAWLER_MAX_CONCURRENT="10"
+$env:LOG_LEVEL="DEBUG"
+python main.py
+```
+
 ### 스케줄러 모드
 ```powershell
 # config.yaml에서 scheduler.enabled=true 설정 후
 python main.py --schedule
+
+# 프로파일과 함께 사용
+python main.py --schedule --profile prod
 ```
 
 ### 설정 파일 지정
@@ -104,6 +132,47 @@ Get-Content logs/collector.log -Tail 50
 Get-Content logs/error.log
 ```
 
+## 고급 설정
+
+### 프로파일 시스템
+
+프로파일을 사용하면 환경별로 다른 설정을 쉽게 관리할 수 있습니다.
+
+- `config.yaml`: 기본 설정
+- `config.dev.yaml`: 개발 환경 (DEBUG 로그, 낮은 동시성)
+- `config.prod.yaml`: 프로덕션 환경 (INFO 로그, 높은 동시성)
+
+프로파일 파일은 기본 설정을 오버라이드합니다.
+
+### 환경 변수 지원
+
+`.env` 파일 또는 시스템 환경 변수로 설정을 오버라이드할 수 있습니다.
+
+**우선순위**: 환경 변수 > 프로파일 설정 > 기본 설정
+
+```bash
+# .env 파일 예시
+DB_PATH=production.db
+LOG_LEVEL=INFO
+CRAWLER_MAX_CONCURRENT=10
+TARGETS=https://site1.com,https://site2.com
+```
+
+### 타겟별 상세 설정
+
+`config.yaml`에서 타겟별로 개별 설정을 지정할 수 있습니다.
+
+```yaml
+target_configs:
+  - url: https://example.com
+    name: "Example Site"
+    timeout: 15
+    max_retries: 5
+    delay: 2.0
+    headers:
+      User-Agent: "Custom Agent"
+```
+
 ## 파일 구조
 
 - `main.py`: 진입점 및 스케줄러
@@ -111,7 +180,11 @@ Get-Content logs/error.log
 - `modules/rss_reader.py`: RSS/Atom 피드 리더
 - `modules/database.py`: SQLite DB 인터페이스 (중복 검사)
 - `modules/logger.py`: 로깅 모듈 (파일/콘솔, 로그 로테이션)
-- `config.yaml`: 설정 파일
+- `modules/config_loader.py`: 설정 로더 (환경 변수, 프로파일 지원)
+- `config.yaml`: 기본 설정 파일
+- `config.dev.yaml`: 개발 환경 설정
+- `config.prod.yaml`: 프로덕션 환경 설정
+- `.env.example`: 환경 변수 템플릿
 - `requirements.txt`: 패키지 목록
 - `tests/`: 단위 테스트
 - `logs/`: 로그 파일 디렉터리

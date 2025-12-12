@@ -4,5 +4,6 @@ aiosqlite
 pyyaml
 feedparser
 apscheduler
+python-dotenv
 pytest
 pytest-asyncio
