@@ -5,5 +5,7 @@ pyyaml
 feedparser
 apscheduler
 python-dotenv
+trafilatura
+lxml
 pytest
 pytest-asyncio

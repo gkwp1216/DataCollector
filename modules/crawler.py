@@ -4,16 +4,19 @@ from typing import Optional, Dict
 
 import aiohttp
 from bs4 import BeautifulSoup
+from modules.content_extractor import ContentExtractor, extract_main_content
 
 
 class AsyncCrawler:
-    def __init__(self, *, timeout: int = 10, max_retries: int = 3, delay: float = 1.0, user_agent: str = None):
+    def __init__(self, *, timeout: int = 10, max_retries: int = 3, delay: float = 1.0, user_agent: str = None, use_trafilatura: bool = False):
         # ClientSession은 이벤트 루프가 실행중일 때 생성해야 하므로 지연 생성합니다.
         self._session = None
         self._timeout = timeout
         self._max_retries = max_retries
         self._delay = delay
         self._user_agent = user_agent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        self._use_trafilatura = use_trafilatura
+        self._extractor = ContentExtractor() if use_trafilatura else None
 
     async def _ensure_session(self):
         if self._session is None:
@@ -68,13 +71,29 @@ class AsyncCrawler:
         return None
 
     def parse_html(self, html: str, url: str = "") -> Dict[str, str]:
-        """간단 파서: title과 본문 일부 추출"""
-        soup = BeautifulSoup(html, "html.parser")
-        title = soup.title.string.strip() if soup.title and soup.title.string else ""
-        # 본문 텍스트: body의 첫 200자
-        body = soup.body.get_text(separator=" ", strip=True) if soup.body else ""
-        snippet = (body[:200] + "...") if len(body) > 200 else body
-        return {"url": url, "title": title, "content": snippet}
+        """HTML 파싱: trafilatura 사용 여부에 따라 다른 방식 적용"""
+        if self._use_trafilatura and self._extractor:
+            # trafilatura로 고급 추출
+            extracted = self._extractor.extract_content(html, url)
+            return {
+                "url": url,
+                "title": extracted.get("title") or "",
+                "content": extracted.get("text") or "",
+                "author": extracted.get("author"),
+                "date": extracted.get("date"),
+                "description": extracted.get("description"),
+                "metadata": extracted.get("metadata", {}),
+                "images": extracted.get("images", []),
+                "links": extracted.get("links", [])
+            }
+        else:
+            # 기존 간단 파서
+            soup = BeautifulSoup(html, "html.parser")
+            title = soup.title.string.strip() if soup.title and soup.title.string else ""
+            # 본문 텍스트: body의 첫 200자
+            body = soup.body.get_text(separator=" ", strip=True) if soup.body else ""
+            snippet = (body[:200] + "...") if len(body) > 200 else body
+            return {"url": url, "title": title, "content": snippet}
 
     async def fetch_and_parse(self, url: str) -> Optional[Dict[str, str]]:
         html = await self.fetch(url)

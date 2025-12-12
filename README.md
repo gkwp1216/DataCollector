@@ -10,6 +10,8 @@
 - 🎯 **중복 방지**: URL 해시 기반 중복 검사
 - ⏰ **스케줄러**: 주기적 자동 실행 (cron/interval)
 - 📊 **SQLite 저장**: 비동기 DB 저장
+- 🐳 **Docker 지원**: 컨테이너화 배포
+- 🔧 **CI/CD**: GitHub Actions 자동화
 
 ## 빠른 시작 (Windows - PowerShell)
 
@@ -299,3 +301,50 @@ docker images
 # 사용하지 않는 이미지/컨테이너 정리
 docker system prune -a
 ```
+
+## 개발
+
+### 코드 품질
+
+```powershell
+# 코드 포맷팅 (black)
+pip install black
+black --line-length=120 .
+
+# Import 정렬 (isort)
+pip install isort
+isort --profile black .
+
+# 린팅 (flake8)
+pip install flake8
+flake8 . --max-line-length=120
+
+# 테스트 + 커버리지
+pip install pytest pytest-asyncio pytest-cov
+pytest tests/ -v --cov=modules --cov-report=html
+```
+
+### CI/CD
+
+프로젝트는 GitHub Actions를 통한 자동화된 CI/CD 파이프라인을 제공합니다:
+
+- **자동 테스트**: Python 3.12, 3.13, 3.14에서 테스트
+- **코드 품질**: flake8, black, isort 자동 검사
+- **Docker 빌드**: 이미지 빌드 및 테스트
+- **보안 스캔**: safety로 의존성 취약점 검사
+
+워크플로우는 `.github/workflows/ci.yml`에 정의되어 있으며, main 브랜치에 push하거나 PR을 생성할 때 자동 실행됩니다.
+
+### 브랜치 전략
+
+- `main`: 프로덕션 준비 코드
+- `develop`: 개발 브랜치
+- `feature/*`: 기능 개발 브랜치
+
+## 라이선스
+
+MIT License
+
+## 기여
+
+Issue 및 Pull Request를 환영합니다!

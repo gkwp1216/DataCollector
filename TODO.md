@@ -21,9 +21,16 @@
 - [x] 스케줄러 (APScheduler, cron/interval 지원)
 
 ### 🚧 진행 중 (2025-12-13)
-- [x] 로그 개선 (2.4) - 파일 로그, 로그 로테이션, 레벨별 분리 ✅ 완료
-- [x] 설정 파일 확장 (2.3) - 환경 변수, 프로파일, 타겟별 설정 ✅ 완료
-- [x] Docker 컨테이너화 (4.2) - Dockerfile, docker-compose ✅ 완료
+- [x] 로그 개선 (2.4) ✅ 완료
+- [x] 설정 파일 확장 (2.3) ✅ 완료
+- [x] Docker 컨테이너화 (4.2) ✅ 완료
+- [x] CI/CD 파이프라인 (4.3) ✅ 완료
+- [x] 본문 정제 개선 (3.3) ✅ 완료
+
+**오늘 성과 (2025-12-13):**
+- ✨ 5개 주요 기능 완료
+- ⏱ 총 작업 시간: 약 115분
+- 📦 13개 파일 생성/수정
 
 ### 📅 이번 주 계획
 1. ~~**로그 개선** (우선순위: 최고) - 15-20분~~ ✅ **완료**
@@ -197,13 +204,47 @@
 **파일:** `modules/crawler.py`
 
 #### 3.3 데이터 정제 및 추출 개선
-- [ ] readability-lxml 또는 trafilatura 통합
-- [ ] 본문 자동 추출
-- [ ] 메타데이터 추출 (og:tags, twitter:card)
-- [ ] 이미지/링크 추출
+- [x] readability-lxml 또는 trafilatura 통합 ✅
+- [x] 본문 자동 추출 ✅
+- [x] 메타데이터 추출 (og:tags, twitter:card) ✅
+- [x] 이미지/링크 추출 ✅
 
-**예상 시간:** 30분  
-**파일:** `modules/crawler.py`, `requirements.txt`
+**완료:** 2025-12-13  
+**실제 소요 시간:** 약 25분  
+**파일:** `modules/content_extractor.py`, `modules/crawler.py`, `tests/test_content_extractor.py`, `requirements.txt`
+
+**구현 내용:**
+- `modules/content_extractor.py`: 콘텐츠 추출 모듈 생성 (200+ lines)
+  - ContentExtractor 클래스
+    - trafilatura 기반 본문 추출
+    - BeautifulSoup로 Open Graph, Twitter Card 메타데이터 추출
+    - 이미지 추출 (상대/절대 경로 변환)
+    - 링크 추출 (article/main 태그 내부)
+  - 편의 함수
+    - extract_main_content(): 간단한 본문 추출
+    - extract_metadata(): 메타데이터만 추출
+- `modules/crawler.py`: trafilatura 통합
+  - use_trafilatura 매개변수 추가
+  - parse_html() 메서드 확장
+    - trafilatura 사용 시: 제목, 본문, 저자, 날짜, 메타데이터, 이미지, 링크 추출
+    - 기본 모드: 기존 BeautifulSoup 파싱 유지
+- `tests/test_content_extractor.py`: 단위 테스트
+  - 본문 추출 테스트
+  - ContentExtractor 클래스 테스트
+  - 메타데이터 추출 테스트
+- `requirements.txt`: trafilatura, lxml 추가
+
+**특징:**
+- 고품질 본문 추출 (trafilatura 알고리즘)
+- 풍부한 메타데이터 (OG, Twitter Card)
+- 유연한 사용 (선택적 활성화)
+- 하위 호환성 유지 (기본 파서 유지)
+
+**테스트 결과:**
+- ✅ 기본 본문 추출 성공
+- ✅ ContentExtractor 클래스 동작 확인
+- ✅ OG/Twitter 메타데이터 추출 정상
+- ✅ 이미지/링크 추출 정상
 
 #### 3.4 알림 및 모니터링
 - [ ] 수집 완료 알림 (이메일, Slack, Discord)
@@ -265,13 +306,34 @@
 - 리소스 제한으로 안정성 확보
 
 #### 4.3 CI/CD 파이프라인
-- [ ] GitHub Actions 워크플로우
-- [ ] 자동 테스트 실행
-- [ ] 린팅 (flake8, black)
-- [ ] 자동 배포 (선택)
+- [x] GitHub Actions 워크플로우 ✅
+- [x] 자동 테스트 실행 ✅
+- [x] 린팅 (flake8, black) ✅
+- [x] Docker 이미지 빌드 자동화 ✅
 
-**예상 시간:** 35분  
-**파일:** `.github/workflows/test.yml`
+**완료:** 2025-12-13  
+**실제 소요 시간:** 약 20분  
+**파일:** `.github/workflows/ci.yml`, `setup.cfg`, `pyproject.toml`
+
+**구현 내용:**
+- `.github/workflows/ci.yml`: 종합 CI/CD 파이프라인
+  - Test Job: Python 3.12, 3.13, 3.14 매트릭스 테스트
+  - Lint Job: flake8, black, isort 검사
+  - Docker Job: 이미지 빌드 및 테스트
+  - Security Job: safety로 취약점 스캔
+  - Codecov 통합 (커버리지 업로드)
+- `setup.cfg`: flake8, pytest 설정
+  - max-line-length: 120
+  - coverage 리포트 설정
+- `pyproject.toml`: black, isort 설정
+  - 일관된 코드 스타일
+  - Python 3.12+ 타겟
+  
+**특징:**
+- 자동화된 품질 검사
+- 멀티 버전 테스트
+- Docker 빌드 검증
+- 보안 취약점 자동 스캔
 
 #### 4.4 문서화
 - [ ] API 문서 (docstring 개선)
