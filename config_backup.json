@@ -1,0 +1,81 @@
+{
+  "db": {
+    "path": "data.db"
+  },
+  "logging": {
+    "log_dir": "logs",
+    "level": "INFO",
+    "enable_file_logging": true,
+    "enable_console_logging": true,
+    "max_bytes": 10485760,
+    "backup_count": 5,
+    "enable_daily_log": true,
+    "enable_error_log": true
+  },
+  "crawler": {
+    "max_concurrent": 5,
+    "timeout": 10,
+    "max_retries": 3,
+    "delay_between_requests": 1.0,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "skip_duplicates": true
+  },
+  "targets": [
+    "https://example.com",
+    "https://httpbin.org/html",
+    "https://httpbin.org/delay/1"
+  ],
+  "target_configs": [
+    {
+      "url": "https://example.com",
+      "name": "Example Domain",
+      "enabled": true,
+      "timeout": 10,
+      "max_retries": 3,
+      "delay": 1.0,
+      "headers": {
+        "User-Agent": "Mozilla/5.0"
+      }
+    },
+    {
+      "url": "https://httpbin.org/html",
+      "name": "HTTPBin HTML Test",
+      "enabled": true,
+      "timeout": 15,
+      "max_retries": 2,
+      "delay": 0.5
+    }
+  ],
+  "rss_feeds": [
+    "https://news.ycombinator.com/rss",
+    "https://hnrss.org/newest?points=100"
+  ],
+  "scheduler": {
+    "enabled": false,
+    "interval_minutes": 60,
+    "cron": null
+  },
+  "notifications": {
+    "enabled": false,
+    "email": {
+      "enabled": false,
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "username": "your-email@gmail.com",
+      "password": "your-app-password",
+      "from": "your-email@gmail.com",
+      "to": "recipient@example.com"
+    },
+    "slack": {
+      "enabled": false,
+      "webhook_url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+    },
+    "discord": {
+      "enabled": false,
+      "webhook_url": "https://discord.com/api/webhooks/YOUR/WEBHOOK/URL"
+    },
+    "notify_on_complete": true,
+    "notify_on_error": true,
+    "error_threshold": 50
+  }
+}

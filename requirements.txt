@@ -7,5 +7,10 @@ apscheduler
 python-dotenv
 trafilatura
 lxml
+tqdm
+PyQt5
 pytest
 pytest-asyncio
+pytest-cov
+playwright
+pytest-playwright

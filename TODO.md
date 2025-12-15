@@ -186,22 +186,114 @@
 ### 3단계: 고급 기능 (우선순위: 낮음)
 
 #### 3.1 동적 페이지 지원
-- [ ] Playwright 또는 Selenium 통합
-- [ ] JavaScript 렌더링 지원
-- [ ] 스크린샷 캡처 옵션
-- [ ] 동적 페이지 전용 설정
+- [x] Playwright 통합 ✅
+- [x] JavaScript 렌더링 지원 ✅
+- [x] 스크린샷 캡처 옵션 ✅
+- [x] 동적 페이지 전용 설정 ✅
 
-**예상 시간:** 40분  
-**파일:** `modules/crawler.py`, `requirements.txt`
+**완료:** 2025-12-13  
+**실제 소요 시간:** 약 30분  
+**파일:** `modules/dynamic_page_handler.py`, `modules/crawler.py`, `tests/test_dynamic_page_handler.py`, `requirements.txt`
+
+**구현 내용:**
+- `modules/dynamic_page_handler.py`: Playwright 기반 동적 페이지 핸들러 (300+ lines)
+  - DynamicPageHandler 클래스
+    - Chromium 브라우저 자동화
+    - 헤드리스/헤드풀 모드 지원
+    - 다양한 대기 전략: load, domcontentloaded, networkidle, commit
+    - 선택자 대기: wait_for_selector
+    - JavaScript 실행: execute_js
+    - 스크린샷 캡처: 전체 페이지, 파일 저장
+    - 여러 페이지 동시 수집: max_concurrent 제어
+  - Context Manager 지원 (async with)
+  - fetch_dynamic_page() 편의 함수
+- `modules/crawler.py`: Playwright 통합
+  - use_playwright 매개변수 추가
+  - _ensure_playwright(): 핸들러 지연 초기화
+  - _fetch_with_playwright(): 동적 페이지 수집
+  - fetch() 메서드: use_playwright_override로 URL별 제어
+  - close() 메서드: Playwright 리소스 정리
+- `tests/test_dynamic_page_handler.py`: 종합 테스트
+  - 기본 페이지 수집
+  - JavaScript 실행
+  - 여러 페이지 동시 수집
+  - 타임아웃 처리
+  - 404 에러 처리
+- `requirements.txt`: playwright, pytest-playwright 추가
+
+**특징:**
+- JavaScript 렌더링 완벽 지원
+- SPA (Single Page Application) 크롤링 가능
+- 유연한 대기 전략 (네트워크, 선택자)
+- 스크린샷 자동 캡처
+- Context Manager로 안전한 리소스 관리
+- URL별 동적/정적 선택 가능
+
+**테스트 결과:**
+- ✅ 6개 테스트 모두 통과
+- ✅ Example.com 페이지 수집 성공
+- ✅ JavaScript 실행 정상
+- ✅ 2개 페이지 동시 수집
+- ✅ 타임아웃 처리 확인
+- ✅ 404 에러 처리 확인
 
 #### 3.2 robots.txt 준수
-- [ ] urllib.robotparser 통합
-- [ ] robots.txt 캐싱
-- [ ] 수집 허용 여부 확인
-- [ ] 우회 옵션 (주의해서 사용)
+- [x] urllib.robotparser 통합 ✅
+- [x] robots.txt 캐싱 ✅
+- [x] 수집 허용 여부 확인 ✅
+- [x] Crawl-delay 준수 ✅
 
-**예상 시간:** 20분  
-**파일:** `modules/crawler.py`
+**완료:** 2025-12-15  
+**실제 소요 시간:** 약 20분  
+**파일:** `modules/robots_handler.py`, `modules/crawler.py`, `tests/test_robots_handler.py`
+
+**구현 내용:**
+- `modules/robots_handler.py`: robots.txt 핸들러 모듈 (300+ lines)
+  - RobotsHandler 클래스
+    - urllib.robotparser 기반 파싱
+    - 도메인별 캐싱 (1시간 기본)
+    - can_fetch(): URL 크롤링 허용 여부 확인
+    - get_crawl_delay(): Crawl-delay 값 가져오기
+    - get_request_rate(): Request-rate 값 가져오기
+    - User-agent별 규칙 처리
+    - 캐시 관리 (clear_cache, get_cache_info)
+  - check_robots_allowed() 편의 함수
+- `modules/crawler.py`: robots.txt 통합
+  - respect_robots 매개변수 추가
+  - robots_cache_duration 설정
+  - _ensure_robots_handler(): 핸들러 지연 초기화
+  - fetch() 메서드: robots.txt 자동 확인
+    - 차단된 URL은 None 반환
+    - Crawl-delay 자동 적용
+  - check_robots 매개변수로 URL별 제어
+  - close() 메서드: RobotsHandler 정리
+- `tests/test_robots_handler.py`: 종합 테스트
+  - 기본 robots.txt 확인
+  - 캐싱 동작 검증
+  - Crawl-delay 확인
+  - respect_robots=False 모드
+  - User-Agent별 규칙
+  - 캐시 삭제
+  - 편의 함수
+  - 오류 처리 (존재하지 않는 도메인)
+
+**특징:**
+- **윤리적 크롤링**: 사이트 정책 자동 준수
+- **효율적 캐싱**: 도메인별 1시간 캐시
+- **자동 Crawl-delay**: robots.txt의 지연 시간 자동 적용
+- **유연한 설정**: respect_robots로 활성화/비활성화
+- **안전한 기본값**: 오류 시 크롤링 허용 (보수적 접근)
+- **User-agent 지원**: 봇별 다른 규칙 적용
+
+**테스트 결과:**
+- ✅ 8개 테스트 모두 통과
+- ✅ httpbin.org: robots.txt 없음, 허용
+- ✅ Google: robots.txt 존재, 검색 차단 확인
+- ✅ 캐시 생성 및 재사용 정상
+- ✅ Crawl-delay 확인 정상
+- ✅ respect_robots=False 동작 확인
+- ✅ 캐시 삭제 기능 정상
+- ✅ 잘못된 URL 안전하게 처리
 
 #### 3.3 데이터 정제 및 추출 개선
 - [x] readability-lxml 또는 trafilatura 통합 ✅

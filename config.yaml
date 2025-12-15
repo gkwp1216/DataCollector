@@ -56,3 +56,32 @@ scheduler:
   # - "0 */6 * * *"  # 6시간마다
   # - "0 9 * * *"    # 매일 오전 9시
   # - "0 0 * * 0"    # 매주 일요일 자정
+
+# 알림 설정
+notifications:
+  enabled: false  # 알림 활성화 여부
+  
+  # 이메일 알림
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "your-email@gmail.com"
+    password: "your-app-password"  # Gmail 앱 비밀번호
+    from: "your-email@gmail.com"
+    to: "recipient@example.com"
+  
+  # Slack 알림
+  slack:
+    enabled: false
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+  
+  # Discord 알림
+  discord:
+    enabled: false
+    webhook_url: "https://discord.com/api/webhooks/YOUR/WEBHOOK/URL"
+  
+  # 알림 조건
+  notify_on_complete: true  # 수집 완료 시 알림
+  notify_on_error: true  # 에러 발생 시 알림
+  error_threshold: 50  # 실패율이 이 값(%)을 초과하면 알림

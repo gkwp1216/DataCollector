@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}로그 보기 - Data Collector{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-file-text"></i> 로그 보기</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <!-- Log File List -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-folder"></i> 로그 파일</h6>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for log_file in log_files %}
+                    <a href="?file={{ log_file }}&lines={{ lines }}" 
+                       class="list-group-item list-group-item-action {% if log_file == selected_file %}active{% endif %}">
+                        <i class="bi bi-file-earmark-text"></i> {{ log_file }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Lines Selector -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-list-ol"></i> 표시 줄 수</h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="/logs">
+                    <input type="hidden" name="file" value="{{ selected_file }}">
+                    <select class="form-select mb-2" name="lines" onchange="this.form.submit()">
+                        <option value="50" {% if lines == 50 %}selected{% endif %}>50줄</option>
+                        <option value="100" {% if lines == 100 %}selected{% endif %}>100줄</option>
+                        <option value="200" {% if lines == 200 %}selected{% endif %}>200줄</option>
+                        <option value="500" {% if lines == 500 %}selected{% endif %}>500줄</option>
+                    </select>
+                </form>
+                
+                <button onclick="location.reload()" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-arrow-clockwise"></i> 새로고침
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-terminal"></i> {{ selected_file }}</h6>
+                <small class="text-muted">최근 {{ lines }}줄</small>
+            </div>
+            <div class="card-body p-0">
+                <pre class="log-content mb-0">{{ log_content }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-scroll to bottom
+    window.addEventListener('load', function() {
+        const logContent = document.querySelector('.log-content');
+        if (logContent) {
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

@@ -10,10 +10,25 @@
 - 🎯 **중복 방지**: URL 해시 기반 중복 검사
 - ⏰ **스케줄러**: 주기적 자동 실행 (cron/interval)
 - 📊 **SQLite 저장**: 비동기 DB 저장
+- 🤖 **robots.txt 준수**: 윤리적 크롤링
+- 🎭 **동적 페이지**: Playwright로 JavaScript 렌더링
+- 📝 **본문 추출**: trafilatura로 깨끗한 텍스트 추출
+- 🔔 **알림 시스템**: Email/Slack/Discord 알림
+- 📈 **메트릭 수집**: 수집 통계 및 성공률 추적
+- 🖥️ **데스크톱 GUI**: PyQt5 기반 네이티브 앱
 - 🐳 **Docker 지원**: 컨테이너화 배포
 - 🔧 **CI/CD**: GitHub Actions 자동화
 
+## 📚 문서
+
+- **[데스크톱 GUI 가이드](DESKTOP_GUI_GUIDE.md)**: PyQt5 GUI 사용법
+- **[CLI 가이드](CLI_GUIDE.md)**: 명령줄 인터페이스 사용법
+- **[API 문서](docs/API.md)**: 모듈 및 API 레퍼런스
+- **[아키텍처](docs/ARCHITECTURE.md)**: 시스템 설계 및 구조
+- **[기여 가이드](CONTRIBUTING.md)**: 프로젝트 기여 방법
 ## 빠른 시작 (Windows - PowerShell)
+
+### CLI 모드
 
 ```powershell
 # 가상환경 생성
@@ -33,11 +48,53 @@ python main.py --schedule
 python -m pytest -q
 ```
 
+### 데스크톱 GUI 모드 ⭐ 추천
+
+```powershell
+# 가상환경 활성화 및 의존성 설치 (위와 동일)
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# GUI 실행
+python desktop_gui.py
+```hon -m pytest -q
+```
+
 ## 사용법
 
-### 일회성 실행
+### 📋 CLI 명령어 (서브커맨드 기반)
+
 ```powershell
+# 도움말 확인
+python main.py --help
+python main.py <command> --help
+
+# 일회성 데이터 수집
+python main.py collect
+
+# 특정 URL 수집
+python main.py collect --url https://example.com
+
+# 스케줄러 모드 실행
+python main.py schedule
+
+# 설정 파일 검증
+python main.py config --validate
+
+# 설정 확인
+python main.py config --show
+```
+
+**상세한 CLI 가이드**: [`CLI_GUIDE.md`](CLI_GUIDE.md) 참조
+
+### 레거시 사용법 (하위 호환)
+
+```powershell
+# 일회성 실행
 python main.py
+
+# 스케줄러 모드
+python main.py --schedule
 ```
 
 ### 프로파일 사용
@@ -336,6 +393,105 @@ pytest tests/ -v --cov=modules --cov-report=html
 워크플로우는 `.github/workflows/ci.yml`에 정의되어 있으며, main 브랜치에 push하거나 PR을 생성할 때 자동 실행됩니다.
 
 ### 브랜치 전략
+
+- `main`: 안정 버전
+- `develop`: 개발 버전
+- `feature/*`: 새 기능
+- `fix/*`: 버그 수정
+
+---
+
+## 📖 추가 문서
+
+### 개발자 가이드
+
+- **[API 문서](docs/API.md)**: 모든 모듈 및 함수의 상세 API 레퍼런스
+- **[아키텍처](docs/ARCHITECTURE.md)**: 시스템 설계, 데이터 흐름, 컴포넌트 구조
+- **[기여 가이드](CONTRIBUTING.md)**: 프로젝트 기여 방법, 코딩 스타일, PR 절차
+
+### 사용자 가이드
+
+- **[CLI 가이드](CLI_GUIDE.md)**: 명령줄 인터페이스 완전 가이드
+- **[환경 변수](.env.example)**: 설정 가능한 모든 환경 변수
+
+### 예제
+
+```python
+# 프로그래밍 방식으로 사용
+import asyncio
+from modules.crawler import AsyncCrawler
+from modules.database import init_db, save_item
+
+async def main():
+    await init_db("data.db")
+    
+    crawler = AsyncCrawler(
+        timeout=15,
+        use_trafilatura=True,
+        respect_robots=True
+    )
+    
+    try:
+        data = await crawler.fetch_and_parse("https://example.com")
+        if data:
+            await save_item("data.db", data)
+            print(f"Collected: {data['title']}")
+    finally:
+        await crawler.close()
+
+asyncio.run(main())
+```
+
+더 많은 예제는 [API 문서](docs/API.md)를 참조하세요.
+
+---
+
+## 🤝 기여
+
+기여를 환영합니다! [CONTRIBUTING.md](CONTRIBUTING.md)를 참조하세요.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📝 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+
+---
+
+## 📧 연락처
+
+- **프로젝트 관리자**: gkwp1216
+- **이슈 리포팅**: [GitHub Issues](https://github.com/gkwp1216/DataCollector/issues)
+- **질문 및 토론**: [GitHub Discussions](https://github.com/gkwp1216/DataCollector/discussions)
+
+---
+
+## 참조
+
+이 프로젝트는 다음 오픈소스 프로젝트를 활용합니다:
+
+- [aiohttp](https://docs.aiohttp.org/) - 비동기 HTTP 클라이언트/서버
+- [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) - HTML 파싱
+- [feedparser](https://feedparser.readthedocs.io/) - RSS 피드 파싱
+- [Playwright](https://playwright.dev/) - 브라우저 자동화
+- [trafilatura](https://trafilatura.readthedocs.io/) - 웹 콘텐츠 추출
+- [APScheduler](https://apscheduler.readthedocs.io/) - 작업 스케줄링
+
+---
+
+## ⭐ Star History
+
+프로젝트가 유용하다면 ⭐ 스타를 눌러주세요!
+
+---
+
+**Happy Crawling! 🚀**
 
 - `main`: 프로덕션 준비 코드
 - `develop`: 개발 브랜치

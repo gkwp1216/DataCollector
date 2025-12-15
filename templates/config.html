@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}설정 관리 - Data Collector{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-gear"></i> 설정 관리</h1>
+</div>
+
+<form method="POST" action="/config">
+    <!-- Crawler Settings -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-cpu"></i> 크롤러 설정</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="max_concurrent" class="form-label">동시 요청 수</label>
+                        <input type="number" class="form-control" id="max_concurrent" name="max_concurrent" 
+                               value="{{ config.crawler.max_concurrent }}" min="1" max="20">
+                        <div class="form-text">한 번에 처리할 최대 요청 수 (1-20)</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="timeout" class="form-label">타임아웃 (초)</label>
+                        <input type="number" class="form-control" id="timeout" name="timeout" 
+                               value="{{ config.crawler.timeout }}" min="5" max="60">
+                        <div class="form-text">요청 타임아웃 시간 (5-60초)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="max_retries" class="form-label">재시도 횟수</label>
+                        <input type="number" class="form-control" id="max_retries" name="max_retries" 
+                               value="{{ config.crawler.max_retries }}" min="0" max="10">
+                        <div class="form-text">실패 시 재시도 횟수 (0-10)</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="delay" class="form-label">요청 간 지연 (초)</label>
+                        <input type="number" step="0.1" class="form-control" id="delay" name="delay" 
+                               value="{{ config.crawler.delay_between_requests }}" min="0" max="10">
+                        <div class="form-text">요청 사이의 대기 시간 (0-10초)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="skip_duplicates" name="skip_duplicates" 
+                               {% if config.crawler.skip_duplicates %}checked{% endif %}>
+                        <label class="form-check-label" for="skip_duplicates">중복 건너뛰기</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="use_trafilatura" name="use_trafilatura" 
+                               {% if config.crawler.use_trafilatura %}checked{% endif %}>
+                        <label class="form-check-label" for="use_trafilatura">본문 추출 사용</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="use_playwright" name="use_playwright" 
+                               {% if config.crawler.use_playwright %}checked{% endif %}>
+                        <label class="form-check-label" for="use_playwright">동적 페이지 지원</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="respect_robots" name="respect_robots" 
+                               {% if config.crawler.respect_robots %}checked{% endif %}>
+                        <label class="form-check-label" for="respect_robots">robots.txt 준수</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Targets -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-globe"></i> 대상 사이트</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="targets" class="form-label">URL 목록 (한 줄에 하나씩)</label>
+                <textarea class="form-control" id="targets" name="targets" rows="8" 
+                          placeholder="https://example.com&#10;https://another-site.com">{{ config.targets|join('\n') if config.targets else '' }}</textarea>
+                <div class="form-text">수집할 웹 페이지 URL을 각 줄에 하나씩 입력하세요.</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- RSS Feeds -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-rss"></i> RSS 피드</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="rss_feeds" class="form-label">RSS/Atom 피드 URL (한 줄에 하나씩)</label>
+                <textarea class="form-control" id="rss_feeds" name="rss_feeds" rows="8" 
+                          placeholder="https://news.ycombinator.com/rss&#10;https://example.com/feed">{{ config.rss_feeds|join('\n') if config.rss_feeds else '' }}</textarea>
+                <div class="form-text">RSS 또는 Atom 피드 URL을 각 줄에 하나씩 입력하세요.</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logging Settings -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> 로깅 설정</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="log_level" class="form-label">로그 레벨</label>
+                        <select class="form-select" id="log_level" name="log_level">
+                            <option value="DEBUG" {% if config.logging.level == 'DEBUG' %}selected{% endif %}>DEBUG</option>
+                            <option value="INFO" {% if config.logging.level == 'INFO' %}selected{% endif %}>INFO</option>
+                            <option value="WARNING" {% if config.logging.level == 'WARNING' %}selected{% endif %}>WARNING</option>
+                            <option value="ERROR" {% if config.logging.level == 'ERROR' %}selected{% endif %}>ERROR</option>
+                            <option value="CRITICAL" {% if config.logging.level == 'CRITICAL' %}selected{% endif %}>CRITICAL</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enable_file_logging" name="enable_file_logging" 
+                               {% if config.logging.enable_file_logging %}checked{% endif %}>
+                        <label class="form-check-label" for="enable_file_logging">파일 로깅</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enable_console_logging" name="enable_console_logging" 
+                               {% if config.logging.enable_console_logging %}checked{% endif %}>
+                        <label class="form-check-label" for="enable_console_logging">콘솔 로깅</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scheduler Settings -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-clock"></i> 스케줄러 설정</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" 
+                               {% if config.scheduler.enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="scheduler_enabled">스케줄러 활성화</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="interval_minutes" class="form-label">실행 간격 (분)</label>
+                        <input type="number" class="form-control" id="interval_minutes" name="interval_minutes" 
+                               value="{{ config.scheduler.interval_minutes }}" min="5" max="1440">
+                        <div class="form-text">자동 실행 간격 (5-1440분)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Button -->
+    <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-save"></i> 설정 저장
+        </button>
+    </div>
+</form>
+
+{% endblock %}

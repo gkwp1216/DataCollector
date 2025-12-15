@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}수집 진행 상황 - Data Collector{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-arrow-repeat"></i> 수집 진행 상황</h1>
+    <button id="stopBtn" class="btn btn-danger" {% if not crawler_state.running %}disabled{% endif %}>
+        <i class="bi bi-stop-circle"></i> 중지
+    </button>
+</div>
+
+<!-- Progress -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">전체 진행률</h5>
+        <div class="progress mb-3" style="height: 30px;">
+            <div id="progressBar" class="progress-bar progress-bar-striped {% if crawler_state.running %}progress-bar-animated{% endif %}" 
+                 role="progressbar" 
+                 style="width: {{ (crawler_state.progress / crawler_state.total * 100) if crawler_state.total > 0 else 0 }}%">
+                <span id="progressText">{{ crawler_state.progress }} / {{ crawler_state.total }}</span>
+            </div>
+        </div>
+        
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h3 id="totalCount">{{ crawler_state.total }}</h3>
+                <p class="text-muted">총 대상</p>
+            </div>
+            <div class="col-md-4">
+                <h3 id="successCount" class="text-success">{{ crawler_state.results|length }}</h3>
+                <p class="text-muted">성공</p>
+            </div>
+            <div class="col-md-4">
+                <h3 id="errorCount" class="text-danger">{{ crawler_state.errors|length }}</h3>
+                <p class="text-muted">실패</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-check-circle"></i> 성공한 항목</h6>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <ul id="resultsList" class="list-group">
+                    {% for result in crawler_state.results %}
+                        <li class="list-group-item">
+                            <strong>{{ result.title }}</strong><br>
+                            <small class="text-muted">{{ result.url }}</small>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">아직 성공한 항목이 없습니다.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="bi bi-x-circle"></i> 실패한 항목</h6>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <ul id="errorsList" class="list-group">
+                    {% for error in crawler_state.errors %}
+                        <li class="list-group-item">
+                            <strong>{{ error.url }}</strong><br>
+                            <small class="text-danger">{{ error.error }}</small>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">실패한 항목이 없습니다.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh progress every 2 seconds
+    function updateProgress() {
+        fetch('/api/progress')
+            .then(response => response.json())
+            .then(data => {
+                // Update progress bar
+                const percent = data.total > 0 ? (data.progress / data.total * 100) : 0;
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = data.progress + ' / ' + data.total;
+                
+                // Update if still running
+                if (data.running) {
+                    progressBar.classList.add('progress-bar-animated');
+                } else {
+                    progressBar.classList.remove('progress-bar-animated');
+                    document.getElementById('stopBtn').disabled = true;
+                }
+                
+                // Update counts
+                document.getElementById('successCount').textContent = data.results_count;
+                document.getElementById('errorCount').textContent = data.errors_count;
+                
+                // Update results list
+                const resultsList = document.getElementById('resultsList');
+                if (data.results_count > 0) {
+                    resultsList.innerHTML = data.results.map(r => 
+                        `<li class="list-group-item">
+                            <strong>${r.title || 'No title'}</strong><br>
+                            <small class="text-muted">${r.url}</small>
+                        </li>`
+                    ).join('');
+                } else {
+                    resultsList.innerHTML = '<li class="list-group-item text-muted">아직 성공한 항목이 없습니다.</li>';
+                }
+                
+                // Update errors list
+                const errorsList = document.getElementById('errorsList');
+                if (data.errors_count > 0) {
+                    errorsList.innerHTML = data.errors.map(e => 
+                        `<li class="list-group-item">
+                            <strong>${e.url}</strong><br>
+                            <small class="text-danger">${e.error}</small>
+                        </li>`
+                    ).join('');
+                } else {
+                    errorsList.innerHTML = '<li class="list-group-item text-muted">실패한 항목이 없습니다.</li>';
+                }
+            })
+            .catch(error => console.error('Error fetching progress:', error));
+    }
+    
+    // Stop crawler
+    document.getElementById('stopBtn').addEventListener('click', function() {
+        if (confirm('크롤러를 중지하시겠습니까?')) {
+            fetch('/api/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert('크롤러 중지 요청을 전송했습니다.');
+                    this.disabled = true;
+                })
+                .catch(error => {
+                    alert('중지 요청 실패: ' + error);
+                });
+        }
+    });
+    
+    // Update every 2 seconds
+    setInterval(updateProgress, 2000);
+</script>
+{% endblock %}
