@@ -9,6 +9,7 @@ trafilatura
 lxml
 tqdm
 PyQt5
+Pillow
 pytest
 pytest-asyncio
 pytest-cov

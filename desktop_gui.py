@@ -293,13 +293,13 @@ class CollectorTab(QWidget):
         
         self.start_btn = QPushButton("▶ 수집 시작")
         self.start_btn.clicked.connect(self.start_collection)
-        self.start_btn.setStyleSheet("QPushButton { background-color: #28a745; color: white; font-weight: bold; padding: 10px; }")
+        self.start_btn.setStyleSheet("QPushButton { background-color: #333333; color: white; border: 1px solid #333333; padding: 10px; border-radius: 4px; } QPushButton:hover { background-color: #555555; }")
         btn_layout.addWidget(self.start_btn)
         
         self.stop_btn = QPushButton("⏹ 중지")
         self.stop_btn.clicked.connect(self.stop_collection)
         self.stop_btn.setEnabled(False)
-        self.stop_btn.setStyleSheet("QPushButton { background-color: #dc3545; color: white; font-weight: bold; padding: 10px; }")
+        self.stop_btn.setStyleSheet("QPushButton { background-color: white; color: #dc3545; border: 1px solid #dc3545; padding: 10px; border-radius: 4px; } QPushButton:hover { background-color: #fff5f5; }")
         btn_layout.addWidget(self.stop_btn)
         
         layout.addLayout(btn_layout)
@@ -568,7 +568,7 @@ class ConfigTab(QWidget):
         # Save Button
         save_btn = QPushButton("💾 설정 저장")
         save_btn.clicked.connect(self.save_config)
-        save_btn.setStyleSheet("QPushButton { background-color: #007bff; color: white; font-weight: bold; padding: 10px; }")
+        save_btn.setStyleSheet("QPushButton { background-color: #333333; color: white; border: 1px solid #333333; padding: 10px; border-radius: 4px; } QPushButton:hover { background-color: #555555; }")
         layout.addWidget(save_btn)
         
         layout.addStretch()
@@ -764,13 +764,13 @@ class KeywordSearchTab(QWidget):
         
         self.search_btn = QPushButton("🔍 검색 시작")
         self.search_btn.clicked.connect(self.start_search)
-        self.search_btn.setStyleSheet("QPushButton { background-color: #007bff; color: white; font-weight: bold; padding: 10px; }")
+        self.search_btn.setStyleSheet("QPushButton { background-color: #333333; color: white; border: 1px solid #333333; padding: 10px; border-radius: 4px; } QPushButton:hover { background-color: #555555; }")
         btn_layout.addWidget(self.search_btn)
         
         self.stop_btn = QPushButton("⏹ 중지")
         self.stop_btn.clicked.connect(self.stop_search)
         self.stop_btn.setEnabled(False)
-        self.stop_btn.setStyleSheet("QPushButton { background-color: #dc3545; color: white; font-weight: bold; padding: 10px; }")
+        self.stop_btn.setStyleSheet("QPushButton { background-color: white; color: #dc3545; border: 1px solid #dc3545; padding: 10px; border-radius: 4px; } QPushButton:hover { background-color: #fff5f5; }")
         btn_layout.addWidget(self.stop_btn)
         
         layout.addLayout(btn_layout)
@@ -941,44 +941,142 @@ class MainWindow(QMainWindow):
         self.apply_style()
     
     def apply_style(self):
-        """Apply modern UI style"""
+        """Apply white-toned simple UI style"""
         self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f5f5f5;
+            /* Global Reset & Base */
+            * {
+                font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+                font-size: 10pt;
+                color: #333333;
             }
+            QMainWindow, QWidget {
+                background-color: #FFFFFF;
+            }
+            
+            /* Tabs */
+            QTabWidget::pane {
+                border: 1px solid #E5E5E5;
+                background-color: #FFFFFF;
+                border-radius: 4px;
+            }
+            QTabBar::tab {
+                background-color: #F8F9FA;
+                color: #666666;
+                padding: 10px 20px;
+                border: 1px solid #E5E5E5;
+                border-bottom: none;
+                margin-right: 4px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+            QTabBar::tab:selected {
+                background-color: #FFFFFF;
+                color: #000000;
+                font-weight: bold;
+                border-bottom: 2px solid #333333;
+            }
+            QTabBar::tab:hover {
+                background-color: #FFFFFF;
+                color: #000000;
+            }
+            
+            /* GroupBox */
             QGroupBox {
                 font-weight: bold;
-                border: 2px solid #cccccc;
-                border-radius: 5px;
-                margin-top: 10px;
-                padding-top: 10px;
+                border: 1px solid #E5E5E5;
+                border-radius: 4px;
+                margin-top: 20px;
+                padding-top: 15px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 left: 10px;
-                padding: 0 5px 0 5px;
+                padding: 0 5px;
+                background-color: #FFFFFF;
+                color: #444444;
             }
+            
+            /* Inputs */
+            QLineEdit, QTextEdit, QSpinBox, QComboBox {
+                border: 1px solid #DDDDDD;
+                border-radius: 4px;
+                padding: 8px;
+                background-color: #FFFFFF;
+                selection-background-color: #E8F0FE;
+                selection-color: #333333;
+            }
+            QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QComboBox:focus {
+                border: 1px solid #AAAAAA;
+                background-color: #FFFFFF;
+            }
+            
+            /* Buttons */
             QPushButton {
-                border-radius: 5px;
-                padding: 5px;
-                font-weight: bold;
+                background-color: #FFFFFF;
+                border: 1px solid #DDDDDD;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: 600;
+                color: #444444;
             }
             QPushButton:hover {
-                background-color: #e0e0e0;
+                background-color: #F8F9FA;
+                border-color: #999999;
+                color: #000000;
             }
-            QTabWidget::pane {
-                border: 1px solid #cccccc;
+            QPushButton:pressed {
+                background-color: #F1F3F5;
+            }
+            QPushButton:disabled {
+                background-color: #FAFAFA;
+                color: #CCCCCC;
+                border-color: #EEEEEE;
+            }
+            
+            /* Tables */
+            QTableWidget {
+                border: 1px solid #E5E5E5;
+                gridline-color: #F0F0F0;
+                background-color: #FFFFFF;
+            }
+            QHeaderView::section {
+                background-color: #F8F9FA;
+                border: none;
+                border-bottom: 1px solid #E5E5E5;
+                padding: 8px;
+                font-weight: bold;
+                color: #555555;
+            }
+            
+            /* Scrollbars */
+            QScrollBar:vertical {
+                border: none;
+                background: #F8F9FA;
+                width: 10px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #DDDDDD;
+                min-height: 20px;
                 border-radius: 5px;
             }
-            QTabBar::tab {
-                background: #e0e0e0;
-                border: 1px solid #cccccc;
-                padding: 10px;
-                margin-right: 2px;
+            QScrollBar::handle:vertical:hover {
+                background: #BBBBBB;
             }
-            QTabBar::tab:selected {
-                background: white;
-                font-weight: bold;
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+            
+            /* Progress Bar */
+            QProgressBar {
+                border: 1px solid #E5E5E5;
+                border-radius: 4px;
+                text-align: center;
+                background-color: #FAFAFA;
+            }
+            QProgressBar::chunk {
+                background-color: #333333;
+                width: 10px;
             }
         """)
 
